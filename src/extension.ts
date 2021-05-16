@@ -1,7 +1,7 @@
 'use strict';
 import * as net from 'net';
 import { XMLHttpRequest } from 'xmlhttprequest-ts';
-import { workspace, ExtensionContext, window, ViewColumn, env, Uri} from 'vscode';
+import { workspace, commands, ExtensionContext, window, ViewColumn, env, Uri} from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo, DynamicFeature, ClientCapabilities, DocumentSelector, InitializeParams, RegistrationData, RPCMessageType, ServerCapabilities, VersionedTextDocumentIdentifier } from 'vscode-languageclient';
 
 var client: LanguageClient = null;
@@ -32,7 +32,14 @@ async function configureAndStartClient(context: ExtensionContext) {
     
                     window.showErrorMessage(
                         "Failed to connect to language server. Make sure that the language server is running " +
-                        "-or- configure the extension to connect via standard IO.")
+                        "-or- configure the extension to connect via standard IO.", "Open settings", "Reconnect")
+                        .then( function( str ){
+                             if( str.startsWith("Open") ){
+                                commands.executeCommand('workbench.action.openSettings', context.extension.packageJSON.contributes.configuration.title);
+                             }else if(str.startsWith("Reconnect")){
+                                configureAndStartClient(context);
+                             }
+                        });
                     client = null;
                 });
             })
